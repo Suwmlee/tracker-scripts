@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Mobygames Uploady
-// @namespace    https://orbitalzero.ovh/scripts
-// @version      0.30
+// @namespace    https://github.com/Suwmlee/tracker-scripts
+// @version      0.31
 // @include      https://gazellegames.net/upload.php
 // @include      https://gazellegames.net/torrents.php?action=editgroup*
 // @include      https://www.mobygames.com/*
@@ -258,7 +258,7 @@ function add_validate_button() {
             case "gamecube":
                 mobygames.platform = "Nintendo GameCube";
                 break;
-            case "nintendo-ds":
+            case "nintendo-dsi":
                 mobygames.platform = "Nintendo DS";
                 break;
             case "snes":
