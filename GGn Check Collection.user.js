@@ -6,7 +6,7 @@
 // @author       suwmlee
 // @match        https://gazellegames.net/better.php*
 // ==/UserScript==
-var basestyle = ".hover { background-color:#4169E1; }";
+var basestyle = ".hover { background-color:#169b2c; }";
 
 function addStyle(style)
 {

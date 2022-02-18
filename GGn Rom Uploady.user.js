@@ -66,7 +66,7 @@ function fill_form(url) {
                         if (modlist.length === 1) {
                             NoIntroUrl = modlist.attr('href')
                         }
-                        fill_form(NoIntroUrl)
+                        fill_form("https://datomatic.no-intro.org/index.php" + NoIntroUrl)
 
                         // FOR TESTING
                         // var w = window.open('about:blank');
@@ -83,7 +83,7 @@ function fill_form(url) {
                     responseType: "json",
                     onload: function (response) {
                         var url = undefined
-                        if (name_info.rom_name){
+                        if (name_info.rom_name) {
                             url = response.response[name_info.rom_name]
                         }
                         fill_form(url)
