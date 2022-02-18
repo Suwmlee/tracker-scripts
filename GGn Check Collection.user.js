@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Check Collection
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.1
+// @version      0.2
 // @description  better style for Check a collection page
 // @author       suwmlee
 // @match        https://gazellegames.net/better.php*
