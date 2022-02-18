@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         GGn rom Uploady
+// @name         GGn ROM Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
 // @version      0.2
 // @description  rom Uploady for GGn
@@ -82,7 +82,10 @@ function fill_form(url) {
                     url: "https://objectstorage.ap-tokyo-1.oraclecloud.com/n/nrmpw4xvtvgl/b/bucket-20200224-2012/o/GBA.json",
                     responseType: "json",
                     onload: function (response) {
-                        url = response.response[name_info.rom_name]
+                        var url = undefined
+                        if (name_info.rom_name){
+                            url = response.response[name_info.rom_name]
+                        }
                         fill_form(url)
                     }
                 });
