@@ -19,10 +19,8 @@ function set_name(str) {
     return { 'file_name': file_name, 'rom_name': rom_name, 'game_name': game_name };
 }
 
-function fill_form(response) {
+function fill_form(url) {
     var name_info = set_name($('#file').val())
-    var url = undefined
-    if (response) url = response.response[name_info.rom_name];
     var rld = `[align=center] ${name_info.file_name} matches [url=${url}]No-Intro checksums[/url]
                             Compressed with torrentzip
                             [/align]`
@@ -53,18 +51,44 @@ function fill_form(response) {
 
     $("#fill_rom").click(function () { //After the "appid" input loses focus
         var mobyplatform = $("#platform").val()
+        var name_info = set_name($('#file').val())
         switch (mobyplatform) {
             case "Nintendo DS":
-                // TODO
-                fill_form()
+                GM.xmlHttpRequest({
+                    method: "POST",                  //We call the Steam API to get info on the game
+                    url: "https://datomatic.no-intro.org/index.php?page=search&s=147",
+                    data: "text=" + name_info.rom_name,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    onload: function (response) {
+                        // var pp = $("table[class='info-table']",response.responseText)
+                        var modlist = $('a[href*="page=show_record"]', response.responseText);
+                        var NoIntroUrl = undefined
+                        if (modlist.length === 1) {
+                            NoIntroUrl = modlist.attr('href')
+                        }
+                        fill_form(NoIntroUrl)
+
+                        // FOR TESTING
+                        // var w = window.open('about:blank');
+                        // w.document.open();
+                        // w.document.write(response.responseText);
+                        // w.document.close();
+                    }
+                });
                 break;
-            default:
+            case "Game Boy Advance":
                 var request = GM.xmlHttpRequest({
                     method: "GET",                  //We call the Steam API to get info on the game
                     url: "https://objectstorage.ap-tokyo-1.oraclecloud.com/n/nrmpw4xvtvgl/b/bucket-20200224-2012/o/GBA.json",
                     responseType: "json",
-                    onload: fill_form
+                    onload: function (response) {
+                        url = response.response[name_info.rom_name]
+                        fill_form(url)
+                    }
                 });
+                break;
+            default:
+                fill_form()
                 break;
         }
     });
