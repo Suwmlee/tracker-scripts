@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         GGn ROM Uploady
+// @name         GGn Rom Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.2
+// @version      0.3
 // @description  rom Uploady for GGn
 // @author       cat, suwmlee
 // @match        https://gazellegames.net/upload.php*
