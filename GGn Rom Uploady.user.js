@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Rom Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.4
+// @version      0.5
 // @description  rom Uploady for GGn
 // @author       cat, suwmlee
 // @match        https://gazellegames.net/upload.php*
@@ -64,9 +64,9 @@ function fill_form(url) {
                         var modlist = $('a[href*="page=show_record"]', response.responseText);
                         var NoIntroUrl = undefined
                         if (modlist.length === 1) {
-                            NoIntroUrl = modlist.attr('href')
+                            NoIntroUrl = "https://datomatic.no-intro.org/index.php" + modlist.attr('href')
                         }
-                        fill_form("https://datomatic.no-intro.org/index.php" + NoIntroUrl)
+                        fill_form(NoIntroUrl)
 
                         // FOR TESTING
                         // var w = window.open('about:blank');
