@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Mobygames Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.31
+// @version      0.32
 // @include      https://gazellegames.net/upload.php
 // @include      https://gazellegames.net/torrents.php?action=editgroup*
 // @include      https://www.mobygames.com/*
@@ -134,7 +134,7 @@ function get_screenshots() {
             url: document.URL+"/screenshots",
             onload: function(data) {
                 let nbr_screenshots = 0;
-                resolve(Promise.all($(data.responseText).find("#main .row:last a").map( function() {
+                const promisUser = Promise.all($(data.responseText).find("#main .row:last a").map( function() {
                     let image_url = $(this).attr("href");
                     if ($(this).css("background-image").indexOf("title-screen") == -1 && nbr_screenshots < 16) {
                         nbr_screenshots++;
@@ -153,7 +153,24 @@ function get_screenshots() {
                             });
                         }); 
                     }
-                })));
+                }));
+                if (nbr_screenshots < 4){
+                    console.log("need promo imgs")
+                    const promisPro = Promise.all($('img[src*="/images/promo/s/"]', data.responseText).map( function() {
+                        let image_url = "https://" + window.location.hostname + $(this).attr("src");
+                        var screen = image_url.replace("/images/promo/s/", "/images/promo/l/")
+                        if (nbr_screenshots < 16) {
+                            nbr_screenshots++;
+                            return screen
+                        }
+                    }))
+                    Promise.all([promisUser, promisPro]).then(function(data) {
+                        const promisAll = data.flat();
+                        resolve(promisAll);
+                    })
+                }else {
+                    resolve(promisUser);
+                }
             },
             onerror: function(error) {
                 throw error;
