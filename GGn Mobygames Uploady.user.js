@@ -406,7 +406,14 @@ function add_validate_button() {
                 break;
         }
         
-        alert("Uploady done !");
+        $("#save_link").val("Uploady done !");
+        $("#save_link").prop("disabled", true);
+        console.log("Uploady done !")
+        setTimeout(function () {
+            console.log("TimeUp")
+            $("#save_link").prop("disabled", false);
+            $("#save_link").val("Save link for GGn");
+        }, 500);
 	});
 }
 
