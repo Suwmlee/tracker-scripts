@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Mobygames Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.32
+// @version      0.33
 // @include      https://gazellegames.net/upload.php
 // @include      https://gazellegames.net/torrents.php?action=editgroup*
 // @include      https://www.mobygames.com/*
@@ -24,40 +24,40 @@ try {
 }
 
 function init() {
-	var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
-	GM_setValue("mobygames", JSON.stringify(mobygames));
+    var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
+    GM_setValue("mobygames", JSON.stringify(mobygames));
 
-	if (window.location.hostname == "gazellegames.net") {
+    if (window.location.hostname == "gazellegames.net") {
         if (window.location.pathname == '/upload.php') {
-			add_search_buttons();
-		}
-		else if (window.location.pathname == '/torrents.php' && /action=editgroup/.test(window.location.search)) {
-			add_search_buttons_alt();
+            add_search_buttons();
         }
-	}
-	else if (window.location.hostname == "www.mobygames.com") {
-		add_validate_button();
-	}
+        else if (window.location.pathname == '/torrents.php' && /action=editgroup/.test(window.location.search)) {
+            add_search_buttons_alt();
+        }
+    }
+    else if (window.location.hostname == "www.mobygames.com") {
+        add_validate_button();
+    }
 
-	GM_addStyle(button_css());
+    GM_addStyle(button_css());
 }
 
 function add_search_buttons() {
-	$("input[name='title']").after('<input id="moby_uploady_Search" type="button" value="Search MobyGames"/>');
-    $("#moby_uploady_Search").click(function() {
-		var title = encodeURIComponent($("#title").val());
+    $("input[name='title']").after('<input id="moby_uploady_Search" type="button" value="Search MobyGames"/>');
+    $("#moby_uploady_Search").click(function () {
+        var title = encodeURIComponent($("#title").val());
 
         window.open("https://www.mobygames.com/search/quick?q=" + title, '_blank');	//For every platform
 
-		var mobygames = {};
+        var mobygames = {};
 
-		GM_setValue("mobygames", JSON.stringify(mobygames));
+        GM_setValue("mobygames", JSON.stringify(mobygames));
     });
 
-	//need to add a button to fill the inputs and stop gathering links
-	$("#moby_uploady_Search").after('<input id="moby_uploady_Validate" type="button" value="Validate MobyGames"/>');
-	$("#moby_uploady_Validate").click( function () {
-		var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
+    //need to add a button to fill the inputs and stop gathering links
+    $("#moby_uploady_Search").after('<input id="moby_uploady_Validate" type="button" value="Validate MobyGames"/>');
+    $("#moby_uploady_Validate").click(function () {
+        var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
 
         $("#aliases").val(mobygames.alternate_titles);
         $("#title").val(mobygames.title);
@@ -67,96 +67,96 @@ function add_search_buttons() {
         $("#album_desc").val(mobygames.description);
 
         var add_screen = $("a:contains('+')");
-        mobygames.screenshots.forEach(function(screenshot, index) {
-			if (index >= 16) return;															//The site doesn't accept more than 16 screenshots
-			if (index >= 3) add_screen.click();												//There's 3 screenshot boxes by default. If we need to add more, we do as if the user clicked on the "[+]" (for reasons mentioned above)
+        mobygames.screenshots.forEach(function (screenshot, index) {
+            if (index >= 16) return;															//The site doesn't accept more than 16 screenshots
+            if (index >= 3) add_screen.click();												//There's 3 screenshot boxes by default. If we need to add more, we do as if the user clicked on the "[+]" (for reasons mentioned above)
             $("[name='screens[]']").eq(index).val(screenshot);											//Finally store the screenshot link in the right screen field.
-		});
+        });
 
         $("#platform").val(mobygames.platform);
 
-		GM_deleteValue("mobygames");
-	});
+        GM_deleteValue("mobygames");
+    });
 }
 
 function add_search_buttons_alt() {
-	$("input[name='name']").after('<input id="moby_uploady_Search" type="button" value="Search MobyGames"/>');
-    $("#moby_uploady_Search").click(function() {
-		var title = encodeURIComponent($("[name='name']").val());
+    $("input[name='name']").after('<input id="moby_uploady_Search" type="button" value="Search MobyGames"/>');
+    $("#moby_uploady_Search").click(function () {
+        var title = encodeURIComponent($("[name='name']").val());
 
         window.open("https://www.mobygames.com/search/quick?q=" + title, '_blank');	//For every platform
 
-		var mobygames = {};
+        var mobygames = {};
 
-		GM_setValue("mobygames", JSON.stringify(mobygames));
+        GM_setValue("mobygames", JSON.stringify(mobygames));
     });
 
-	//need to add a button to fill the inputs and stop gathering links
-	$("#moby_uploady_Search").after('<input id="moby_uploady_Validate" type="button" value="Validate MobyGames"/>');
-	$("#moby_uploady_Validate").click( function () {
-		var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
+    //need to add a button to fill the inputs and stop gathering links
+    $("#moby_uploady_Search").after('<input id="moby_uploady_Validate" type="button" value="Validate MobyGames"/>');
+    $("#moby_uploady_Validate").click(function () {
+        var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
 
         $("input[name='image']").val(mobygames.cover);
 
         var add_screen = $("a:contains('+')");
-        mobygames.screenshots.forEach(function(screenshot, index) {
-			if (index >= 16) return;															//The site doesn't accept more than 16 screenshots
-			if (index >= 3) add_screen.click();												//There's 3 screenshot boxes by default. If we need to add more, we do as if the user clicked on the "[+]" (for reasons mentioned above)
+        mobygames.screenshots.forEach(function (screenshot, index) {
+            if (index >= 16) return;															//The site doesn't accept more than 16 screenshots
+            if (index >= 3) add_screen.click();												//There's 3 screenshot boxes by default. If we need to add more, we do as if the user clicked on the "[+]" (for reasons mentioned above)
             $("[name='screens[]']").eq(index).val(screenshot);											//Finally store the screenshot link in the right screen field.
-		});
+        });
 
-		GM_deleteValue("mobygames");
-	});
+        GM_deleteValue("mobygames");
+    });
 }
 
 function get_cover() {
-    return new Promise( function (resolve, reject) {
-                       GM_xmlhttpRequest({
-                           method: "GET",
-                           url: $("#coreGameCover>a").attr("href"),
-                           onload: function(data) {
-                               let cover = "";
-                               cover = $(data.responseText).find("img[src*='covers']").attr("src");
-                               if (cover.indexOf("http") == -1) cover = "https://" + window.location.hostname + cover;
-                               resolve(cover);
-                           },
-                           onerror: function(error) {
-                               throw error;
-                           }
-                       });
+    return new Promise(function (resolve, reject) {
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: $("#coreGameCover>a").attr("href"),
+            onload: function (data) {
+                let cover = "";
+                cover = $(data.responseText).find("img[src*='covers']").attr("src");
+                if (cover.indexOf("http") == -1) cover = "https://" + window.location.hostname + cover;
+                resolve(cover);
+            },
+            onerror: function (error) {
+                throw error;
+            }
+        });
     });
 }
 
 function get_screenshots() {
-    return new Promise( function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
         GM_xmlhttpRequest({
             method: "GET",
-            url: document.URL+"/screenshots",
-            onload: function(data) {
+            url: document.URL + "/screenshots",
+            onload: function (data) {
                 let nbr_screenshots = 0;
-                const promisUser = Promise.all($(data.responseText).find("#main .row:last a").map( function() {
+                const promisUser = Promise.all($(data.responseText).find("#main .row:last a").map(function () {
                     let image_url = $(this).attr("href");
                     if ($(this).css("background-image").indexOf("title-screen") == -1 && nbr_screenshots < 16) {
                         nbr_screenshots++;
-                        return new Promise (function (resolve, reject) {
+                        return new Promise(function (resolve, reject) {
                             GM_xmlhttpRequest({
                                 method: "GET",
                                 url: image_url,
-                                onload: function(data) {
+                                onload: function (data) {
                                     var screen = $(data.responseText).find(".screenshot img").attr("src");
                                     if (screen.indexOf("http") == -1) screen = "https://" + window.location.hostname + screen;
                                     resolve(screen);
                                 },
-                                onerror: function(error) {
+                                onerror: function (error) {
                                     throw error;
                                 }
                             });
-                        }); 
+                        });
                     }
                 }));
-                if (nbr_screenshots < 4){
+                if (nbr_screenshots < 4) {
                     console.log("need promo imgs")
-                    const promisPro = Promise.all($('img[src*="/images/promo/s/"]', data.responseText).map( function() {
+                    const promisPro = Promise.all($('img[src*="/images/promo/s/"]', data.responseText).map(function () {
                         let image_url = "https://" + window.location.hostname + $(this).attr("src");
                         var screen = image_url.replace("/images/promo/s/", "/images/promo/l/")
                         if (nbr_screenshots < 16) {
@@ -164,15 +164,15 @@ function get_screenshots() {
                             return screen
                         }
                     }))
-                    Promise.all([promisUser, promisPro]).then(function(data) {
+                    Promise.all([promisUser, promisPro]).then(function (data) {
                         const promisAll = data.flat();
                         resolve(promisAll);
                     })
-                }else {
+                } else {
                     resolve(promisUser);
                 }
             },
-            onerror: function(error) {
+            onerror: function (error) {
                 throw error;
             }
         });
@@ -180,10 +180,10 @@ function get_screenshots() {
 }
 
 function add_validate_button() {
-	if (typeof console != "undefined" && typeof console.log != "undefined") console.log("Adding button to window");
-	$("body").prepend('<input type="button" id="save_link" value="Save link for GGn"/>');
-	$("#save_link").click( function() {
-		var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
+    if (typeof console != "undefined" && typeof console.log != "undefined") console.log("Adding button to window");
+    $("body").prepend('<input type="button" id="save_link" value="Save link for GGn"/>');
+    $("#save_link").click(function () {
+        var mobygames = JSON.parse(GM_getValue("mobygames") || "{}");
         if (typeof mobygames == "string") mobygames = JSON.parse(mobygames);   //Fix for a weird bug happening on http://www.arkane-studios.com/uk/arx.php, transforming the array of strings into a string
 
         get_cover().then(function (cover) {
@@ -191,25 +191,25 @@ function add_validate_button() {
         }).catch(function (err) {
             throw err;
         });
-        
-        get_screenshots().then(function(screenshots) {
+
+        get_screenshots().then(function (screenshots) {
             mobygames.screenshots = screenshots;
             GM_setValue("mobygames", JSON.stringify(mobygames));
         }).catch(function (err) {
             throw err;
         });
-        
+
         mobygames.description = html2bb($(".col-md-8, .col-lg-8").html().replace(/[\n]*/g, "").replace(/.*<h2>Description<\/h2>/g, "").replace(/<div.*/g, "").replace(/< *br *>/g, "\n"));//YOU SHOULD NOT DO THIS AT HOME
-        
+
         var alternate_titles = [];
-        $("h2:contains('Alternate Titles')").next().find("li").each( function() {
+        $("h2:contains('Alternate Titles')").next().find("li").each(function () {
             alternate_titles.push($(this).text().replace(/[^"]*"([^"]*)".*/g, "$1"));
         });
         mobygames.alternate_titles = alternate_titles.join(", ");
-        
+
         var date_array = $("#coreGameRelease div:contains('Released')").next().text().split(", ");
-        mobygames.year = date_array[date_array.length-1];
-        
+        mobygames.year = date_array[date_array.length - 1];
+
         var tags_array = $("#coreGameGenre div:contains('Genre')").next().text().split(/[\/,]/);
         tags_array = tags_array.concat($("#coreGameGenre div:contains('Setting')").next().text().split(/[\/,]/));
         tags_array = tags_array.concat($("#coreGameGenre div:contains('Gameplay')").next().text().split(/[\/,]/));
@@ -223,9 +223,9 @@ function add_validate_button() {
             }
         });
         mobygames.tags = trimmed_tags_array.join(", ");
-        
+
         mobygames.title = $(".niceHeaderTitle>a").text().trim();
-        
+
         mobygames.platform = "";
         var platform = window.location.pathname.replace(/\/game\/([^\/]+)\/.*/, "$1");
         switch (platform) {
@@ -405,7 +405,7 @@ function add_validate_button() {
                 mobygames.platform = "Retro - Other";
                 break;
         }
-        
+
         $("#save_link").val("Uploady done !");
         $("#save_link").prop("disabled", true);
         console.log("Uploady done !")
@@ -414,11 +414,11 @@ function add_validate_button() {
             $("#save_link").prop("disabled", false);
             $("#save_link").val("Save link for GGn");
         }, 500);
-	});
+    });
 }
 
-function button_css () {
-	return "input#save_link {\
+function button_css() {
+    return "input#save_link {\
                 position: fixed;\
                 left: 0;\
                 top: 0;\
