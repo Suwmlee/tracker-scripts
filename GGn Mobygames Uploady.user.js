@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GGn Mobygames Uploady
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.33
+// @version      0.34
 // @include      https://gazellegames.net/upload.php
 // @include      https://gazellegames.net/torrents.php?action=editgroup*
 // @include      https://www.mobygames.com/*
@@ -14,7 +14,6 @@
 // @grant        GM_addStyle
 // @grant		 GM_xmlhttpRequest
 // @require      https://code.jquery.com/jquery-3.1.1.min.js
-// @require      https://greasyfork.org/scripts/23948-html2bbcode/code/HTML2BBCode.js
 // ==/UserScript==
 
 try {
@@ -63,6 +62,7 @@ function add_search_buttons() {
         $("#title").val(mobygames.title);
         $("#tags").val(mobygames.tags);
         $("#year").val(mobygames.year);
+        $("#Rating").val(mobygames.rating);
         $("#image").val(mobygames.cover);
         $("#album_desc").val(mobygames.description);
 
@@ -199,8 +199,33 @@ function add_validate_button() {
             throw err;
         });
 
-        mobygames.description = html2bb($(".col-md-8, .col-lg-8").html().replace(/[\n]*/g, "").replace(/.*<h2>Description<\/h2>/g, "").replace(/<div.*/g, "").replace(/< *br *>/g, "\n"));//YOU SHOULD NOT DO THIS AT HOME
+        var ratingElement = $("div:contains('ESRB Rating')")
+        if (ratingElement.length > 0) {
+            var rating = ratingElement.next()[ratingElement.next().length - 1].outerText
+            switch (rating) {
+                // https://www.mobygames.com/search/quick?q=esrb
+                case "Adults Only":
+                    mobygames.rating = 9
+                    break;
+                case "Mature":
+                    mobygames.rating = 7
+                    break;
+                case "Teen":
+                    mobygames.rating = 5
+                    break;
+                case "Early Childhood":
+                    mobygames.rating = 1
+                    break;
+                default:
+                    mobygames.rating = 3
+                    break;
+            }
+        } else {
+            mobygames.rating = 3
+        }
 
+        var originaldes = $(".col-md-8, .col-lg-8").html().replace(/[\n]*/g, "").replace(/.*<h2>Description<\/h2>/g, "").replace(/<div.*/g, "").replace(/< *br *>/g, "\n")
+        mobygames.description = html2bb(originaldes);
         var alternate_titles = [];
         $("h2:contains('Alternate Titles')").next().find("li").each(function () {
             alternate_titles.push($(this).text().replace(/[^"]*"([^"]*)".*/g, "$1"));
@@ -429,4 +454,34 @@ function button_css() {
                 padding: 10px;\
                 background-color: lightblue;\
             }";
+}
+
+function html2bb(str) {
+    if(typeof str === "undefined") return "";
+    str = str.replace(/< *h3 *>/g, "[u]");
+    str = str.replace(/< *\/ *h3 *>/g, "[/u]");
+    str = str.replace(/< *p *style=\\*\"margin-top:\\* 0\" *>/g, "")
+    str = str.replace(/< *\/ *p *>/g, "");
+
+    str = str.replace(/< *br *\/*>/g, "\n");
+    str = str.replace(/< *u *>/g, "[u]");
+    str = str.replace(/< *\/ *u *>/g, "[/u]");
+    str = str.replace(/< *\/ *li *>/g, "");
+    str = str.replace(/< *li *>/g, "[*]");
+    str = str.replace(/< *\/ *ul *>/g, "");
+    str = str.replace(/< *ul *class=\\*\"bb_ul\\*\" *>/g, "");
+    str = str.replace(/< *h2 *class=\"bb_tag\" *>/g, "[u]");
+    str = str.replace(/< *\/ *h2 *>/g, "[/u]");
+    str = str.replace(/< *strong *>/g, "[b]");
+    str = str.replace(/< *\/ *strong *>/g, "[/b]");
+    str = str.replace(/< *i *>/g, "[i]");
+    str = str.replace(/< *\/ *i *>/g, "[/i]");
+    str = str.replace(/\&quot;/g, "\"");
+    str = str.replace(/< *img *src="([^"]*)" *>/g, "[img]$1[/img]");
+    str = str.replace(/< *b *>/g, "[b]");
+    str = str.replace(/< *\/ *b *>/g, "[/b]");
+    str = str.replace(/< *a [^>]*>/g, "");
+    str = str.replace(/< *\/ *a *>/g, "");
+    //Yeah, all these damn stars. Because people put spaces where they shouldn't.
+    return str;
 }
