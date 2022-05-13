@@ -7,7 +7,7 @@
 // @include      https://www.mobygames.com/*
 // @include      http://www.mobygames.com/*
 // @description  Uploady for mobygames
-// @author       NeutronNoir, ZeDoCaixao
+// @author       NeutronNoir, ZeDoCaixao, suwmlee
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue

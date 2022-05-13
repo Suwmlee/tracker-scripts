@@ -53,9 +53,12 @@ function fill_form(url) {
         var mobyplatform = $("#platform").val()
         var name_info = set_name($('#file').val())
         switch (mobyplatform) {
+            // if you want support more platform,
+            // copy this case and paste, and change platform number, you can find the right number in `https://datomatic.no-intro.org` 
+            // here "nintendo ds" is 147
             case "Nintendo DS":
                 GM.xmlHttpRequest({
-                    method: "POST",                  //We call the Steam API to get info on the game
+                    method: "POST",
                     url: "https://datomatic.no-intro.org/index.php?page=search&s=147",
                     data: "text=" + name_info.rom_name,
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
