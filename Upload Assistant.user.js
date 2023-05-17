@@ -317,7 +317,7 @@ const prefs = {
 	EP_threshold: 26 * 60, // For autodetection of release type: max time of EP in s
 	anthology_time_threshold: 120 * 60, // For autodetection of release type: threshold time in s to consider single artist release anthology
 	anthology_tracks_threshold: 20, // For autodetection of release type: tracklist length to consider single artist release anthology
-	auto_rehost_cover: true, // PTPimg / using 3rd party script
+	auto_rehost_cover: false, // PTPimg / using 3rd party script
 	auto_preview_cover: true,
 	image_size_warning: 2048, // threshold in KiB for making cover size warning // 0 to disable
 	image_size_reduce_threshold: 4096, // threshold in KiB for attempt to reduce cover size // 0 to disable
@@ -352,7 +352,7 @@ const prefs = {
 	reorder_upload_fields: true, // move release type in fornt of initial year; YADG-aware
 	no_multiformat: false,
 	ops_always_edition: true, // (only new uploads) don't use original release but always specific edition (unify with other trackers)
-	add_spectrals_template: true,
+	add_spectrals_template: false,
 	yadg_auto_next_scraper: false,
 	// online parsers specific
 	apple_use_release_cover: true, // usually smaller version of search result cover
@@ -2487,7 +2487,7 @@ function fillFromText(evt = undefined) {
 				if (yadg_prefil && isUpload && (yadg = document.getElementById('yadg_submit')) != null && !yadg.disabled) yadg.click();
 			});
 			if (!release.album_year) release.album_year = parseInt(getHomoIdentifier('PUBYEAR')) || undefined;
-			if (elementWritable(ref = formItem('year'))) ref.value = release.album_year || '';
+			if (elementWritable(ref = formItem('year'))) ref.value = release.album_year || releaseYear;
 			if (elementWritable(ref = formItem('remaster_year'))
 					|| !isUpload && i > 0 && (ref = formItem('year')) != null && !ref.disabled) ref.value = releaseYear || '';
 			const explicitTrack = track => track.identifiers.EXPLICIT == 1,
@@ -2861,178 +2861,7 @@ function fillFromText(evt = undefined) {
 					finalizeDesc(ref);
 				}
 				// Release description
-				if (elementWritable(ref = document.getElementById('release_samplerate'))) {
-					ref.value = Object.keys(release.sampleRates).length == 1 && Object.keys(release.sampleRates)[0] ?
-						Math.floor(Object.keys(release.sampleRates)[0] / 1000) :
-					Object.keys(release.sampleRates).length > 1 || isNaN(Object.keys(release.sampleRates)[0]) ? '999' : '';
-				}
-				let lineage = '', rlsDesc = '', hasSR = Object.keys(release.sampleRates).length > 0;
-				let srInfo = hasSR ? Object.keys(release.sampleRates).filter(samplerate => samplerate > 0)
-					.sort((a, b) => release.sampleRates[b] - release.sampleRates[a])
-					.map(f => f / 1000).join('/') + ' kHz' : undefined;
-				let techInfo = [
-					''.bbPre().bbHide('DR' + (release.albumdrs.length == 1 ? release.albumdrs[0] : '')),
-				];
-				if (['Blu-Ray', 'DVD', 'SACD'].includes(media)) {
-					if (!isNWCD) rlsDesc = srInfo;
-					addChannelInfo();
-					if (media == 'SACD' || isFromDSD) addDSDInfo();
-					if (prefs.cleanup_descriptions) addDRInfo();
-					//addRGInfo();
-					addHybridInfo();
-				} else if (media == 'Vinyl') {
-					let hassr = hasSR && (!isNWCD || Object.keys(release.sampleRates).length > 1);
-					if (hassr) lineage = srInfo + ' ';
-					if (vinylRipInfo) {
-						if (vinylTest.test(vinylRipInfo[0]) && RegExp.$2.toLowerCase() != 'unknown')
-							vinylRipInfo[0] = vinylRipInfo[0].replace(vinylTest, '$1[color=blue]$2[/color]');
-						if (hassr) vinylRipInfo[0] = vinylRipInfo[0].replace(/^Vinyl\b/, 'vinyl');
-						lineage += vinylRipInfo[0];
-						lineage += '\n\n[u]Lineage:[/u]' + vinylRipInfo.slice(1).map(l => '\n' + [
-							// RuTracker translation
-							['Код класса состояния винила', 'Vinyl condition class'],
-							['Устройство воспроизведения', 'Turntable'],
-							['Головка звукоснимателя', 'Cartridge'],
-							['Картридж', 'Cartridge'],
-							['Предварительный усилитель', 'Preamplifier'],
-							['АЦП', 'ADC'],
-							['Программа-оцифровщик', 'Software'],
-							['Обработка звука', 'Audio post-processing'],
-							['Обработка', 'Post-processing'],
-						].reduce((acc, it) => acc.replace(...it), l)).join('');
-					} else lineage += `${hassr ? ' vinyl' : 'Vinyl'} rip by [color=blue][/color]\n\n[u]Lineage:[/u]\n`;
-					techInfo.push('[img][/img]'.repeat(8).bbHide('Technical'));
-				} else if (tracks.some(track => track.bitdepth > 16)) { // other Hi-Res
-					if (!isNWCD || Object.keys(release.sampleRates).length > 1) rlsDesc = srInfo;
-					if (release.channels && release.channels != 2 || dualMono) addChannelInfo();
-					if (isFromDSD) addDSDInfo();
-					if (!isFromDSD || prefs.cleanup_descriptions) addDRInfo();
-					//addRGInfo();
-					addHybridInfo();
-					if (!isFromDSD && !prefs.cleanup_descriptions
-							&& (Object.keys(release.sampleRates).length != 1 || Object.keys(release.sampleRates)[0] != 88200))
-						techInfo.shift();
-				} else { // 16bit and lossy
-					if (Object.keys(release.sampleRates).some(f => f != 44100)) rlsDesc = srInfo;
-					if (release.channels && release.channels != 2 || dualMono) addChannelInfo();
-					addDRInfo();
-					//addRGInfo();
-					if (!prefs.cleanup_descriptions) techInfo.shift();
-					if (release.codec == 'MP3' && release.vendor) {
-						// TODO: parse mp3 vendor string
-					} else if (['AAC', 'Opus', 'Vorbis'].includes(release.codec) && release.vendor) {
-						let _encoder_settings = release.vendor;
-						if (release.codec == 'AAC' && /^(?:qaac)\s+[\d\.]+/i.test(release.vendor)) {
-							let enc = [];
-							if (matches = release.vendor.match(/\bqaac\s+([\d\.]+)\b/i)) enc[0] = matches[1];
-							if (matches = release.vendor.match(/\bCoreAudioToolbox\s+([\d\.]+)\b/i)) enc[1] = matches[1];
-							if (matches = release.vendor.match(/\b(AAC-\S+)\s+Encoder\b/i)) enc[2] = matches[1];
-							if (matches = release.vendor.match(/\b([TC]VBR|ABR|CBR)\s+(\S+)\b/)) { enc[3] = matches[1]; enc[4] = matches[2]; }
-							if (matches = release.vendor.match(/\bQuality\s+(\d+)\b/i)) enc[5] = matches[1];
-							_encoder_settings = 'Converted by Apple\'s ' + enc[2] + ' encoder (' + enc[3] + '-' + enc[4] + ')';
-						}
-						lineage = _encoder_settings;
-					}
-				}
-				function addDSDInfo() {
-					let nfo = ' DSD64';
-					if (prefs.sacd_decoder) nfo += ' using ' + prefs.sacd_decoder;
-					nfo += '\nOutput gain: ' + '+0dB'.bbCode();
-					if (isNWCD) lineage = 'From' + nfo; else {
-						if (rlsDesc) rlsDesc += ' from'; else rlsDesc = 'From';
-						rlsDesc += nfo;
-					}
-				}
-				function addDRInfo() {
-					if (release.albumdrs.length != 1 || document.getElementById('release_dynamicrange') != null) return;
-					let nfo = 'DR' + release.albumdrs[0];
-					if (release.albumdrs[0] < 4) nfo = nfo.bbColor('red');
-					if (rlsDesc) rlsDesc += ' | ';
-					rlsDesc += nfo;
-				}
-				function addRGInfo() {
-					if (release.albumgains.length <= 0) return;
-					if (rlsDesc) rlsDesc += ' | ';
-					rlsDesc += 'RG'; //rlsDesc += 'RG ' + albumgains[0];
-				}
-				function addChannelInfo() {
-					if (release.channel_mode) var chi = release.channel_mode;
-						else if (getHomoIdentifier('DUAL_MONO')) chi = 'dual mono';
-							else if (release.channels) chi = getChanString(release.channels);
-					if (!chi) return;
-					if (rlsDesc) rlsDesc += ', '; else rlsDesc = 'Channels configuration: ';
-					rlsDesc += chi;
-				}
-				function addHybridInfo() {
-					if (release.bitdepths.length > 1) release.bitdepths.filter(bitdepth => bitdepth != 24).forEach(function(bitdepth) {
-						var hybrid_tracks = tracks.filter(it => it.bitdepth == bitdepth).sort(trackComparer).map(function(it) {
-							return (release.totalDiscs > 1 && it.disc_number ? it.disc_number + '-' : '') + it.track_number;
-						});
-						if (hybrid_tracks.length < 1) return;
-						if (rlsDesc) rlsDesc += '\n';
-						rlsDesc += 'Note: track';
-						if (hybrid_tracks.length > 1) rlsDesc += 's';
-						rlsDesc += ' #' + hybrid_tracks.join(', ') +
-							(hybrid_tracks.length > 1 ? ' are' : ' is') + ' ' + bitdepth + 'bit lossless';
-					});
-				}
-				rlsDesc = rlsDesc ? [rlsDesc] : [ ];
-				function finRlsDesc() {
-					if (techInfo.filter(Boolean).length > 0) rlsDesc.push(techInfo.filter(Boolean).join(' | '));
-					if (release.release_descriptions.length > 0) Array.prototype.push.apply(rlsDesc, release.release_descriptions);
-					if (prefs.insert_release_date && !isNaN(releaseDate) && !/^\s*\d{4}\s*$/.test(release.release_date))
-						rlsDesc.push('Released ' + releaseDate.toUTCDateString());
-				}
-				if ((ref = document.getElementById('release_lineage')) != null) {
-					lineage = lineage ? [lineage] : [ ];
-					finRlsDesc();
-					if (sourceUrl || release.urls.length > 0) lineage.push(getReleaseUrls());
-					if (elementWritable(ref) && (ref.value = lineage.join('\n\n'))) preview(1);
-				} else {
-					if (lineage.length > 0) rlsDesc.push(lineage);
-					finRlsDesc();
-					if (sourceUrl || release.urls.length > 0) rlsDesc.push(getReleaseUrls());
-				}
-				if (prefs.add_spectrals_template && !['Vinyl'].includes(media))
-					rlsDesc.push('[img][/img]\n'.repeat(16).slice(0, -1).bbHide('Spectrograms'));
-				if (elementWritable(ref = formItem('release_desc')))
-					if (ref.value = rlsDesc.filter(Boolean).join('\n\n')) preview(isNWCD ? 2 : 1);
-				if (release.encoding == 'lossless' && Object.keys(release.sampleRates).length <= 1
-						&& release.bitdepths.length <= 1 //&& release.bitdepths.some(bitdepth => bitdepth >= 24)
-						&& formItem('release_desc') != null) Promise.all(
-					release.dirpaths.map(dirPath => textFileReader(dirPath + '\\foo_dr.txt')
-						.catch(reason => textFileReader(dirPath + '\\' + dirPath.replace(/^.*[\\\/]/, '') + '_log.txt')))
-				).then(function(drlogs) {
-					let ref = formItem('release_desc');
-					if (ref == null) throw "Assertion failed: formItem('release_desc') != NULL";
-					const drExtractors = [
-						/^(?:Official DR value):\s*(?:DR(\d+))\b/m, // foo_dynamic_range
-						/^(?:Official EP\/Album DR):\s*(\d+)\b/m, // MAAT DROffline MkII
-					];
-					let DRs = drlogs.map(function(drlog) {
-						var dr = drExtractors.reduce((dr, rx) => dr != null && dr >= 0 ? dr
-							: rx.test(drlog) ? parseInt(RegExp.$1) : null, null);
-						if (dr != null && dr >= 0) return dr;
-						let columnIndex;
-						drlog.split(/\r?\n/).forEach(function(line) {
-							if (dr != null && dr >= 0) return;
-							let columns = line.trim().split(/\s*\|\s*/);
-							if (!(columnIndex >= 0)) columnIndex = columns.indexOf('DR (PMF)');
-								else if (columnIndex >= 0 && /^\d+$/.test(columns[columnIndex])) dr = parseInt(columns[columnIndex]);
-						});
-						return dr != null && dr >= 0 ? dr : null;
-					});
-					let DRinfo = '[hide=DR';
-					if (DRs[0] != null && DRs[0] >= 0 && DRs.homogeneous()) DRinfo += DRs[0];
-					DRinfo += ']' + drlogs.map(foodr => foodr.bbPre()).join('\n');
-					if (/(\[hide=DR(\d+)?\]\[pre\])(\[\/pre\])/m.test(ref.value))
-						ref.value = RegExp.leftContext + DRinfo + RegExp.rightContext;
-					else ref.value += '\n\n' + DRinfo + '[/hide]';
-				}, function(reason) {
-					console.log(reason);
-					console.log('foo_dr.txt not exists or is forbidden to read ' +
-						'(TM: Settings > Security > Allow scripts to access local files > All local files)');
-				});
+
 				if (elementWritable(ref = document.getElementById('release_dynamicrange')))
 					ref.value = release.albumdrs.length == 1 ? release.albumdrs[0] : '';
 				// Compare to online source
