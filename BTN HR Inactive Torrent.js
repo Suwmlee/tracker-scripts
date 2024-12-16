@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BTN HR Inactive Torrent
 // @namespace    https://github.com/Suwmlee/tracker-scripts
-// @version      0.1
+// @version      0.2
 // @description  download BTN HR and Inactive torrents 
 // @author       suwmlee
 // @match        https://broadcasthe.net/snatchlist.php*&hnr=1
@@ -34,7 +34,7 @@
         .input-group label {
             margin-right: 5px;
             width:80px;
-            color: red;
+            color: black;
             font-size: 14px;
             white-space: nowrap;
         }
@@ -92,18 +92,35 @@
     document.getElementById('copyLinksButton').addEventListener('click', () => {
         const authkey = authkeyInput.value.trim();
         const torrentPass = torrentPassInput.value.trim();
+        let downloadUrlsText = '';
 
-        // 获取所有的 <a> 元素
-        const allLinks = document.querySelectorAll('a');
-
-        // 过滤出 href 包含 'action=download' 的链接
-        const downloadLinks = Array.from(allLinks)
-            .filter(link => link.href.includes('action=download'))
-            .map(link => link.href + "&authkey=" + authkey + "&torrent_pass=" + torrentPass) // 获取每个链接的 href 属性
-            .join('\n'); // 用换行符分隔链接
+        if (location.href.include("hnr=1")) {
+            // 获取所有的 <a> 元素
+            const allLinks = document.querySelectorAll('a');
+            downloadUrlsText = Array.from(allLinks)
+                .filter(link => link.href.includes('action=download'))
+                .map(link => link.href + "&authkey=" + authkey + "&torrent_pass=" + torrentPass) // 获取每个链接的 href 属性
+                .join('\n'); // 用换行符分隔链接
+        } else {
+            const tableRows = document.querySelectorAll('table tr');
+            const downloadUrls = [];
+            // 遍历每个 <tr>
+            tableRows.forEach(row => {
+                // 检查当前 <tr> 是否包含 "Inactive" 文本
+                if (row.textContent.includes('Inactive')) {
+                    // 获取当前 <tr> 的 id
+                    const rowId = row.id.replace("snatch", "");
+                    if (rowId) {
+                        var downloadUrl = "https://broadcasthe.net/torrents.php?action=download&id=" + rowId + "&authkey=" + authkey + "&torrent_pass=" + torrentPass;
+                        downloadUrls.push(downloadUrl);
+                    }
+                }
+            });
+            downloadUrlsText = downloadUrls.join('\n');
+        }
 
         // 将链接列表复制到剪贴板
-        navigator.clipboard.writeText(downloadLinks)
+        navigator.clipboard.writeText(downloadUrlsText)
             .then(() => {
                 alert('下载链接已复制到剪贴板');
             })
