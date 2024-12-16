@@ -1,51 +1,105 @@
 // ==UserScript==
-// @name         BTN HR links
+// @name         BTN HR Inactive Torrent
 // @namespace    https://github.com/Suwmlee/tracker-scripts
 // @version      0.1
-// @description  download BTN HR torrents link
+// @description  download BTN HR and Inactive torrents 
 // @author       suwmlee
 // @match        https://broadcasthe.net/snatchlist.php*&hnr=1
+// @match        https://broadcasthe.net/snatchlist.php?id=*
 // @grant        GM_addStyle
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
-    // 添加按钮样式
+    // 添加样式
     GM_addStyle(`
-        #copyLinksButton {
+        #customContainer {
             position: fixed;
+            width: 300px;
             bottom: 20px;
             right: 20px;
-            padding: 10px 15px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            margin-right: 5px;
+            width:80px;
+            color: red;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        #copyLinksButton {
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            padding: 10px;
+            width: 100%;
             cursor: pointer;
-            font-size: 14px;
-            z-index: 1000;
+            border-radius: 5px;
         }
         #copyLinksButton:hover {
             background-color: #45a049;
         }
     `);
 
-    // 创建按钮元素
-    const button = document.createElement('button');
-    button.id = 'copyLinksButton';
-    button.textContent = '复制下载链接';
-    document.body.appendChild(button);
+    // 创建容器
+    const container = document.createElement('div');
+    container.id = 'customContainer';
+    container.innerHTML = `
+        <div class="input-group">
+            <label for="authkey">authkey:</label>
+            <input type="text" id="authkey" placeholder="authkey" />
+        </div>
+        <div class="input-group">
+            <label for="torrentPass">torrent_pass:</label>
+            <input type="text" id="torrentPass" placeholder="torrent_pass" />
+        </div>
+        <button id="copyLinksButton">复制下载链接</button>
+    `;
+    document.body.appendChild(container);
 
-    // 添加点击事件
-    button.addEventListener('click', () => {
+    // 初始化输入框值（从 localStorage 读取）
+    const authkeyInput = document.getElementById('authkey');
+    const torrentPassInput = document.getElementById('torrentPass');
+    authkeyInput.value = localStorage.getItem('authkey') || '';
+    torrentPassInput.value = localStorage.getItem('torrentPass') || '';
+
+    // 保存输入框值到 localStorage
+    authkeyInput.addEventListener('input', () => {
+        localStorage.setItem('authkey', authkeyInput.value);
+    });
+    torrentPassInput.addEventListener('input', () => {
+        localStorage.setItem('torrentPass', torrentPassInput.value);
+    });
+
+    // 按钮点击事件
+    document.getElementById('copyLinksButton').addEventListener('click', () => {
+        const authkey = authkeyInput.value.trim();
+        const torrentPass = torrentPassInput.value.trim();
+
         // 获取所有的 <a> 元素
         const allLinks = document.querySelectorAll('a');
 
         // 过滤出 href 包含 'action=download' 的链接
         const downloadLinks = Array.from(allLinks)
             .filter(link => link.href.includes('action=download'))
-            .map(link => link.href) // 获取每个链接的 href 属性
+            .map(link => link.href + "&authkey=" + authkey + "&torrent_pass=" + torrentPass) // 获取每个链接的 href 属性
             .join('\n'); // 用换行符分隔链接
 
         // 将链接列表复制到剪贴板
